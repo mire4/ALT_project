@@ -49,6 +49,15 @@ if __name__ == "__main__":
     group1.add_argument('-T', '--test', dest='test', metavar= 'test', type=str, action='store',
                     help='file with queries and results, for testing.')
 
+
+    parser.add_argument('-t', '--threshold', dest='threshold', action='store', type=int, default=None, 
+                    help='threshold for the spelling correction.')
+    parser.add_argument('-d', '--distance', dest='distance', action='store', default=None,
+                    help='distance function for the spelling correction.')
+
+    parser.add_argument('-s', '--spell', dest='spell', action='store_true', default=False,
+                    help='activate spelling correction.')
+
     args = parser.parse_args()
 
     with open(args.index, 'rb') as fh:
@@ -59,9 +68,13 @@ if __name__ == "__main__":
     searcher.set_showall(args.all)
     searcher.set_snippet(args.snippet)
 
+    searcher.set_spelling(args.spell or (args.distance is not None) or (args.threshold is not None),
+                          args.distance,
+                          args.threshold)
+
 
     # se debe contar o mostrar resultados?
-    if args.count is True:
+    if args.count is True or args.test is not None:
         fnc = searcher.solve_and_count
     else:
         fnc = searcher.solve_and_show
@@ -75,10 +88,10 @@ if __name__ == "__main__":
                 if len(line) > 0 and not line.startswith('#'):
                     query, reference = line.split('\t')
                     reference = int(reference)
-                    result = searcher.solve_and_count(query)
+                    result = fnc(query) # searcher.solve_and_count(query)
                     if result != reference:
                         print("==> ERROR: '%s'\t%d\t%d" % (query, result, reference))
-                        #sys.exit(-1)
+                        sys.exit(-1)
                 else:
                     print(line)
             print('\nParece que todo ha ido bien, buen trabajo!')
