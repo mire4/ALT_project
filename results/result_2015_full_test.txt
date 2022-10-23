@@ -1,4 +1,0 @@
-#
-# DE TODO UN POCO
-#
-"fin de semana" AND title:país	0
