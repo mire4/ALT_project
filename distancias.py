@@ -5,11 +5,11 @@ def levenshtein_matriz(x, y, threshold=None):
     # invocar con él, en cuyo caso se ignora
     lenX, lenY = len(x), len(y)
     D = np.zeros((lenX + 1, lenY + 1), dtype=np.int)
-    for i in range(1, lenX + 1):
+    for i in range(1, lenX + 1): # Rellena la primera fila
         D[i][0] = D[i - 1][0] + 1
-    for j in range(1, lenY + 1):
-        D[0][j] = D[0][j - 1] + 1
-        for i in range(1, lenX + 1):
+    for j in range(1, lenY + 1): # Para cada columna
+        D[0][j] = D[0][j - 1] + 1 # Rellenas su vertical
+        for i in range(1, lenX + 1): # Para cada fila
             D[i][j] = min(
                 D[i - 1][j] + 1,
                 D[i][j - 1] + 1,
@@ -19,7 +19,59 @@ def levenshtein_matriz(x, y, threshold=None):
 
 def levenshtein_edicion(x, y, threshold=None):
     # a partir de la versión levenshtein_matriz
-    return 0,[] # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    lenX, lenY = len(x), len(y)
+    D = np.zeros((lenX + 1, lenY + 1), dtype=np.int)
+    for i in range(1, lenX + 1): # Rellena la primera fila
+        D[i][0] = D[i - 1][0] + 1
+    for j in range(1, lenY + 1): # Para cada columna
+        D[0][j] = D[0][j - 1] + 1 # Rellenas su vertical
+        for i in range(1, lenX + 1): # Para cada fila
+            D[i][j] = min(
+                D[i - 1][j] + 1,
+                D[i][j - 1] + 1,
+                D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
+            )
+    indX, indY = D.shape[0] - 1, D.shape[1] - 1
+    op = []
+    while indX > 0 and indY > 0:
+        ins = D[indX, indY - 1]
+        bor = D[indX - 1, indY]
+        sus = D[indX - 1, indY - 1]
+        opMin = min(ins, bor, sus)
+        if (sus == opMin):
+            op.append('sus')
+            indX -= 1
+            indY -= 1
+        elif (ins == opMin):
+            op.append('ins')
+            indY -= 1
+        elif (bor == opMin):
+            op.append('bor')
+            indX -= 1
+    # Caso llego a una pared de la matriz
+    while indY > 0:
+        op.append('ins')
+        indY -= 1
+    while indX > 0:
+        op.append('bor')
+        indX -= 1
+
+    # Recuperación del camino
+    op = op[::-1]
+    indX, indY = 0, 0
+    secOp = []
+    for o in op:
+        if (o == 'ins'):
+            secOp.append(('', y[indY]))
+            indY += 1
+        elif (o == 'bor'):
+            secOp.append((x[indX], ''))
+            indX += 1
+        elif (o == 'sus'):
+            secOp.append((x[indX], y[indY]))
+            indX += 1
+            indY += 1
+    return D[lenX, lenY], secOp
 
 def levenshtein_reduccion(x, y, threshold=None):
     # completar versión con reducción coste espacial
