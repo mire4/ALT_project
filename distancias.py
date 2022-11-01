@@ -74,9 +74,25 @@ def levenshtein_edicion(x, y, threshold=None):
     return D[lenX, lenY], secOp
 
 def levenshtein_reduccion(x, y, threshold=None):
-    # completar versión con reducción coste espacial
-    return 0 # COMPLETAR Y REEMPLAZAR ESTA PARTE
-
+    lenX, lenY = len(x), len(y)
+    vcurrent = np.zeros(lenX, dtype=int)
+    vprev = np.arange(1, lenX + 1, dtype=int)
+    for j in range(lenY):
+        for i in range(lenX):
+            if (i == 0):
+                vcurrent[0] = min(
+                    j + (x[i] != y[j]),
+                    vprev[i] + 1
+                )
+            else:
+                vcurrent[i] = min(
+                    vcurrent[i - 1] + 1,
+                    vprev[i] + 1,
+                    vprev[i - 1] + (x[i] != y[j])
+                )
+        vprev, vcurrent = vcurrent, vprev
+    return vprev[-1]
+                
 def levenshtein(x, y, threshold):
     # completar versión reducción coste espacial y parada por threshold
     return min(0,threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
