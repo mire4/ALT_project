@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import numpy as np
+import distancias as d
 
 class SpellSuggester:
 
