@@ -13,7 +13,7 @@ def testear_suggester():
     ]
     spellsuggester = SpellSuggester(
         dist_functions = opcionesSpell,
-        vocab = "./corpora/miniquijote.txt")
+        vocab = "./data/miniquijote.txt")
     for dstname in opcionesSpell.keys():
         print(dstname)
         with open(f'{carpeta}/test_suggester_{dstname}.txt','w',

@@ -56,7 +56,7 @@ class SpellSuggester:
         if isinstance(vocabulary,list):
             self.vocabulary = vocabulary # atención! nos quedamos una referencia, a tener en cuenta
         elif isinstance(vocabulary,str):
-            self.vocabulary = self.build_vocab(vocabulary)
+            self.vocabulary = self.build_vocabulary(vocabulary)
         else:
             raise Exception("SpellSuggester incorrect vocabulary value")
 
@@ -72,13 +72,45 @@ class SpellSuggester:
             distance = self.default_distance
         if threshold is None:
             threshold = self.default_threshold
+        
+        #Guardamos cual es la funcion elegida para calcular las distancias
+        """if distance == "levenshtein_m":
+            selectedFunction = d.levenshtein_matriz
+        elif distance == "levenshtein_r":
+            selectedFunction = d.levenshtein_reduccion
+        elif distance == "levenshtein":
+            selectedFunction == d.levenshtein
+        elif distance == "levenshtein_o":
+            selectedFunction = d.levenshtein_cota_optimista
+        elif distance == "damerau_rm":
+            selectedFunction = d.damerau_restricted_matriz
+        elif distance == "damerau_r":
+            selectedFunction = d.damerau_restricted
+        elif distance == "damerau_im":
+            selectedFunction = d.damerau_intermediate_matriz
+        else:
+            selectedFunction = d.damerau_intermediate"""
 
-        ########################################
-        # COMPLETAR
-        ########################################
-            
+        selectedFunction = d.opcionesSpell.get(distance, None)
+
+        if selectedFunction is None:
+            print("Distance type not found")
+            exit()
+
         if flatten:
-            resul = [word for wlist in resul for word in wlist]
-            
-        return resul
-
+            listOfDistances = []
+            for word in self.vocabulary:
+                resFunction = selectedFunction(term, word, threshold)
+                if resFunction <= threshold:
+                    listOfDistances.append(word)
+        else:
+            #Calcular la distancia de la palabra dada con el resto de palabras del vocabulario
+            listOfDistances = [[]]
+            for word in self.vocabulary:
+                resFunction = selectedFunction(term, word, threshold)
+                if resFunction <= threshold:
+                    for i in range(resFunction - len(listOfDistances) + 1):
+                        listOfDistances.append([])
+                    listOfDistances[resFunction].append(word)
+        
+        return listOfDistances
