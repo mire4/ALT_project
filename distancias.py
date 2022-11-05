@@ -117,7 +117,20 @@ def levenshtein(x, y, threshold):
     return vprev[-1]
 
 def levenshtein_cota_optimista(x, y, threshold):
-    return 0 # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    contDict = dict()
+    distancePos, distanceNeg = 0, 0
+    for letter in x:
+        contDict[letter] = contDict.get(letter, 0) + 1
+    for letter in y:
+        contDict[letter] = contDict.get(letter, 0) - 1
+    for value in contDict.values():
+        if value > 0:
+            distancePos += value
+        else:
+            distanceNeg += abs(value)
+        if distancePos >= threshold or distanceNeg >= threshold:
+            return threshold + 1
+    return levenshtein(x, y, threshold)
 
 def damerau_restricted_matriz(x, y, threshold=None):
     # completar versión Damerau-Levenstein restringida con matriz
@@ -152,7 +165,7 @@ opcionesSpell = {
     'levenshtein_m': levenshtein_matriz,
     'levenshtein_r': levenshtein_reduccion,
     'levenshtein':   levenshtein,
-    #'levenshtein_o': levenshtein_cota_optimista,
+    'levenshtein_o': levenshtein_cota_optimista,
     #'damerau_rm':    damerau_restricted_matriz,
     #'damerau_r':     damerau_restricted,
     #'damerau_im':    damerau_intermediate_matriz,
