@@ -557,21 +557,28 @@ class SAR_Project:
 
         """
         # Llamada al get que corresponde según los parámetros indicados
-        solution = []
-        if self.permuterm and ('*' in term or '?' in term):
-            solution =  self.get_permuterm(term, field)
-        elif self.positional:
-            if '\"' in term:
-                term = term.replace('\"','')
-                solution = self.get_positionals(term.split(' '), field)
-            elif self.stemming and self.use_stemming:
-                solution =  self.get_stemming(term, field)
-            else:
-                solution = self.get_positionals([term], field)
-        elif self.stemming and self.use_stemming:
-            solution =  self.get_stemming(term, field)
+        terms = self.index[field].get(term, [])
+        if (self.use_spelling and terms == []):
+            terms = self.speller.suggest(term)
         else:
-            solution =  self.index[field][term]
+            terms = [term]
+
+        solution = []
+        for t in terms:
+            if self.permuterm and ('*' in term or '?' in term):
+                solution =  self.or_posting(self.get_permuterm(term, field), solution)
+            elif self.positional:
+                if '\"' in term:
+                    term = term.replace('\"','')
+                    solution = self.or_posting(self.get_positionals(term.split(' '), field), solution) 
+                elif self.stemming and self.use_stemming:
+                    solution =  self.or_posting(self.get_stemming(term, field), solution)
+                else:
+                    solution = self.or_posting(self.get_positionals([term], field), solution)
+            elif self.stemming and self.use_stemming:
+                solution = self.or_posting(self.get_stemming(term, field), solution)
+            else:
+                solution =  self.or_posting(self.index[field][term], solution)
 
         return solution
 
