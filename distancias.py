@@ -99,7 +99,7 @@ def levenshtein(x, y, threshold):
     vcurrent = np.zeros(lenX, dtype=int)
     vprev = np.arange(1, lenX + 1, dtype=int)
     for j in range(lenY):
-        if (difX + j >= 0 and vprev[difX + j] > threshold):
+        if (difX + j > 0 and vprev[difX + j - 1] > threshold):
             return threshold + 1
         for i in range(lenX):
             if (i == 0):
@@ -152,11 +152,11 @@ opcionesSpell = {
     'levenshtein_m': levenshtein_matriz,
     'levenshtein_r': levenshtein_reduccion,
     'levenshtein':   levenshtein,
-    'levenshtein_o': levenshtein_cota_optimista,
-    'damerau_rm':    damerau_restricted_matriz,
-    'damerau_r':     damerau_restricted,
-    'damerau_im':    damerau_intermediate_matriz,
-    'damerau_i':     damerau_intermediate
+    #'levenshtein_o': levenshtein_cota_optimista,
+    #'damerau_rm':    damerau_restricted_matriz,
+    #'damerau_r':     damerau_restricted,
+    #'damerau_im':    damerau_intermediate_matriz,
+    #'damerau_i':     damerau_intermediate
 }
 
 opcionesEdicion = {
