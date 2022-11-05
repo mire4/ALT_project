@@ -7,6 +7,8 @@ import pickle
 import sys
 
 from numpy import true_divide
+from spellsuggester import SpellSuggester
+import distancias
 
 class SAR_Project:
     """
@@ -54,7 +56,11 @@ class SAR_Project:
         self.show_snippet = False # valor por defecto, se cambia con self.set_snippet()
         self.use_stemming = False # valor por defecto, se cambia con self.set_stemming()
         self.use_ranking = False  # valor por defecto, se cambia con self.set_ranking()
-
+        self.use_spelling = False # valor por defecto, se cambia con self.set_spelling()
+        self.distance = None # valor por defecto, se cambia con self.set_spelling()
+        self.threshold = None # valor por defecto, se cambia con self.set_spelling()
+        self.speller = SpellSuggester(dist_functions = distancias.opcionesSpell)
+    
     ###############################
     ###                         ###
     ###      CONFIGURACION      ###
@@ -121,7 +127,18 @@ class SAR_Project:
         """
         self.use_ranking = v
 
+    def set_spelling(self, use_spelling, distance, threshold):
+        """
 
+        self.use_spelling a True se activa la corrección ortográfica
+        EN LAS PALABRAS NO ENCONTRADAS, en caso contrario NO utilizará
+        corrección ortográfica
+
+        """
+        self.use_spelling = use_spelling
+        self.distance = distance
+        self.threshold = threshold
+        self.speller = SpellSuggester(dist_functions = distancias.opcionesSpell, default_distance = distance, default_threshold = threshold)
 
 
     ###############################
@@ -144,6 +161,7 @@ class SAR_Project:
         self.positional = args['positional']
         self.stemming = args['stem']
         self.permuterm = args['permuterm']
+        self.speller = args['spelling']
 
         # Inicializar diccionarios adicionales
         self.index['article'] = {}
@@ -159,12 +177,24 @@ class SAR_Project:
                     fullname = os.path.join(dir, filename)
                     self.index_file(fullname) # Los indexamos
         
+        self.speller.set_vocabulary(self.extract_vocabulary())
+
         # Si se requiere realizamos los diccionarios adicionales
         if (self.stemming):
             self.make_stemming()
         if (self.permuterm):
             self.make_permuterm()
-        
+
+    def extract_vocabulary(self):
+        vocabulary = []
+        if(self.multifield):
+            for field in self.fields:
+                for word in self.index[field].keys():
+                    if(word not in vocabulary):
+                        vocabulary.append(word)
+            return vocabulary
+        else:
+            return self.index['article'].keys()
 
     def index_file(self, filename):
         """
