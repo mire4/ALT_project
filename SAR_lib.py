@@ -138,7 +138,6 @@ class SAR_Project:
         self.use_spelling = use_spelling
         self.distance = distance
         self.threshold = threshold
-        self.speller = SpellSuggester(dist_functions = distancias.opcionesSpell, default_distance = distance, default_threshold = threshold)
 
 
     ###############################
@@ -161,7 +160,6 @@ class SAR_Project:
         self.positional = args['positional']
         self.stemming = args['stem']
         self.permuterm = args['permuterm']
-        self.speller = args['spelling']
 
         # Inicializar diccionarios adicionales
         self.index['article'] = {}
@@ -192,9 +190,9 @@ class SAR_Project:
                 for word in self.index[field].keys():
                     if(word not in vocabulary):
                         vocabulary.append(word)
-            return vocabulary
+            return list(vocabulary)
         else:
-            return self.index['article'].keys()
+            return list(self.index['article'].keys())
 
     def index_file(self, filename):
         """
@@ -397,7 +395,8 @@ class SAR_Project:
             element = queryList[0]
             # Si el indice es multicampo, guardamos el campo donde se buscara. Si no lo es, buscamos en 'article'
             if self.multifield: field, element = self.get_field(element)
-            else: field, element = 'article', query
+            else: field = 'article'
+            #else: field, element = 'article', query # Daba error 
             # Si esta entre parentesis, los quitamos y llamamos a solve_query de la consulta interior
             if element.startswith('(') and element.endswith(')'):
                 element = element[1:len(element)-1] 
@@ -559,7 +558,7 @@ class SAR_Project:
         # Llamada al get que corresponde según los parámetros indicados
         terms = self.index[field].get(term, [])
         if (self.use_spelling and terms == []):
-            terms = self.speller.suggest(term)
+            terms = self.speller.suggest(term, self.distance, self.threshold)
         else:
             terms = [term]
 
@@ -578,7 +577,7 @@ class SAR_Project:
             elif self.stemming and self.use_stemming:
                 solution = self.or_posting(self.get_stemming(term, field), solution)
             else:
-                solution =  self.or_posting(self.index[field][term], solution)
+                solution =  self.or_posting(self.index[field].get(term, []), solution)
 
         return solution
 

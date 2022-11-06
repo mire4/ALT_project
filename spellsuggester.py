@@ -88,11 +88,9 @@ class SpellSuggester:
                     listOfDistances.append(word)
         else:
             #Calcular la distancia de la palabra dada con el resto de palabras del vocabulario
-            listOfDistances = [[]]
+            listOfDistances = [[] for i in range(threshold + 1)]
             for word in self.vocabulary:
                 resFunction = selectedFunction(term, word, threshold)
                 if resFunction <= threshold:
-                    for i in range(resFunction - len(listOfDistances) + 1):
-                        listOfDistances.append([])
                     listOfDistances[resFunction].append(word)
         return listOfDistances

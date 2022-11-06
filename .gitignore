@@ -1,7 +1,8 @@
 # Custom
 .bin
-results/
 stats/
+referenciasSAR/resul*
+resultados/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

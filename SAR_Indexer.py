@@ -39,7 +39,7 @@ if __name__ == "__main__":
     newsdir = args.newsdir
     indexfile = args.index
 
-    indexer = SAR_Project(**vars(args))
+    indexer = SAR_Project()
     t0 = time.time()
     indexer.index_dir(newsdir, **vars(args))
     t1 = time.time()
