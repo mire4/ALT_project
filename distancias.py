@@ -128,7 +128,7 @@ def levenshtein_cota_optimista(x, y, threshold):
             distancePos += value
         else:
             distanceNeg += abs(value)
-        if distancePos >= threshold or distanceNeg >= threshold:
+        if distancePos > threshold or distanceNeg > threshold:
             return threshold + 1
     return levenshtein(x, y, threshold)
 
