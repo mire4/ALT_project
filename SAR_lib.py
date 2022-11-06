@@ -187,7 +187,7 @@ class SAR_Project:
         vocabulary = []
         if(self.multifield):
             for field in self.fields:
-                for word in self.index[field].keys():
+                for word in self.index[field[0]].keys():
                     if(word not in vocabulary):
                         vocabulary.append(word)
             return list(vocabulary)
@@ -564,20 +564,20 @@ class SAR_Project:
 
         solution = []
         for t in terms:
-            if self.permuterm and ('*' in term or '?' in term):
-                solution =  self.or_posting(self.get_permuterm(term, field), solution)
+            if self.permuterm and ('*' in t or '?' in t):
+                solution =  self.or_posting(self.get_permuterm(t, field), solution)
             elif self.positional:
-                if '\"' in term:
-                    term = term.replace('\"','')
-                    solution = self.or_posting(self.get_positionals(term.split(' '), field), solution) 
+                if '\"' in t:
+                    t = t.replace('\"','')
+                    solution = self.or_posting(self.get_positionals(t.split(' '), field), solution) 
                 elif self.stemming and self.use_stemming:
-                    solution =  self.or_posting(self.get_stemming(term, field), solution)
+                    solution =  self.or_posting(self.get_stemming(t, field), solution)
                 else:
-                    solution = self.or_posting(self.get_positionals([term], field), solution)
+                    solution = self.or_posting(self.get_positionals([t], field), solution)
             elif self.stemming and self.use_stemming:
-                solution = self.or_posting(self.get_stemming(term, field), solution)
+                solution = self.or_posting(self.get_stemming(t, field), solution)
             else:
-                solution =  self.or_posting(self.index[field].get(term, []), solution)
+                solution =  self.or_posting(self.index[field].get(t, []), solution)
 
         return solution
 
