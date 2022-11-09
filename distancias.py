@@ -1,76 +1,58 @@
 import numpy as np
 
 def levenshtein_matriz(x, y, threshold=None):
-    # esta versión no utiliza threshold, se pone porque se puede
-    # invocar con él, en cuyo caso se ignora
+    """
+    Cálculo distancia de levenshtein con matriz
+    """
     lenX, lenY = len(x), len(y)
     D = np.zeros((lenX + 1, lenY + 1), dtype=np.int)
     for i in range(1, lenX + 1): # Rellena la primera fila
         D[i][0] = D[i - 1][0] + 1
-    for j in range(1, lenY + 1): # Para cada columna
-        D[0][j] = D[0][j - 1] + 1 # Rellenas su vertical
-        for i in range(1, lenX + 1): # Para cada fila
+    for j in range(1, lenY + 1): # Para todas las filas
+        D[0][j] = D[0][j - 1] + 1 # Rellenas el primer elemento
+        for i in range(1, lenX + 1): # Para el resto de columnas
             D[i][j] = min(
-                D[i - 1][j] + 1,
-                D[i][j - 1] + 1,
-                D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
+                D[i - 1][j] + 1, # Inserción
+                D[i][j - 1] + 1, # Borrado
+                D[i - 1][j - 1] + (x[i - 1] != y[j - 1]), # Sustitución
             )
     return D[lenX, lenY]
 
 def levenshtein_edicion(x, y, threshold=None):
-    # a partir de la versión levenshtein_matriz
+    """
+    Cálculo distancia de levenshtein con matriz y 
+    recorrido
+    """
     lenX, lenY = len(x), len(y)
     D = np.zeros((lenX + 1, lenY + 1), dtype=np.int)
     for i in range(1, lenX + 1): # Rellena la primera fila
         D[i][0] = D[i - 1][0] + 1
-    for j in range(1, lenY + 1): # Para cada columna
-        D[0][j] = D[0][j - 1] + 1 # Rellenas su vertical
-        for i in range(1, lenX + 1): # Para cada fila
+    for j in range(1, lenY + 1): # Para todas las filas
+        D[0][j] = D[0][j - 1] + 1 # Rellenas el primer elemento
+        for i in range(1, lenX + 1): # Para el resto de columnas
             D[i][j] = min(
-                D[i - 1][j] + 1,
-                D[i][j - 1] + 1,
-                D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
+                D[i - 1][j] + 1, # Inserción
+                D[i][j - 1] + 1, # Borrado
+                D[i - 1][j - 1] + (x[i - 1] != y[j - 1]), # Sustitución
             )
-    indX, indY = D.shape[0] - 1, D.shape[1] - 1
-    op = []
+
+    indX, indY = D.shape[0] - 1, D.shape[1] - 1  # Desde el último elemento
+    secOp = []
     while indX > 0 and indY > 0:
         ins = D[indX, indY - 1]
         bor = D[indX - 1, indY]
         sus = D[indX - 1, indY - 1]
-        opMin = min(ins, bor, sus)
-        if (sus == opMin):
-            op.append('sus')
-            indX -= 1
-            indY -= 1
-        elif (ins == opMin):
-            op.append('ins')
-            indY -= 1
-        elif (bor == opMin):
-            op.append('bor')
-            indX -= 1
-    # Caso llego a una pared de la matriz
+        op, decX, decY = elegir_operacion(x, y, indX, indY, ins, bor, sus)
+        secOp.append(op)
+        indX -= decX
+        indY -= decY
     while indY > 0:
-        op.append('ins')
+        secOp.append(('', y[indY - 1]))
         indY -= 1
     while indX > 0:
-        op.append('bor')
+        secOp.append((x[indX - 1], ''))
         indX -= 1
-
-    # Recuperación del camino
-    op = op[::-1]
-    indX, indY = 0, 0
-    secOp = []
-    for o in op:
-        if (o == 'ins'):
-            secOp.append(('', y[indY]))
-            indY += 1
-        elif (o == 'bor'):
-            secOp.append((x[indX], ''))
-            indX += 1
-        elif (o == 'sus'):
-            secOp.append((x[indX], y[indY]))
-            indX += 1
-            indY += 1
+    secOp = secOp[::-1]
     return D[lenX, lenY], secOp
 
 def levenshtein_reduccion(x, y, threshold=None):
@@ -177,7 +159,7 @@ def damerau_restricted_edicion(x, y, threshold=None):
                     D[i - 2][j - 2] + 1
                 )
     indX, indY = D.shape[0] - 1, D.shape[1] - 1
-    op = []
+    secOp = []
     while indX > 0 and indY > 0:
         ins = D[indX, indY - 1]
         bor = D[indX - 1, indY]
@@ -187,50 +169,17 @@ def damerau_restricted_edicion(x, y, threshold=None):
             int = D[indX - 2, indY - 2]
         else:
             int = float('inf')
-        opMin = min(ins, bor, sus, int)
-        if (int == opMin):
-            op.append('int')
-            indX -= 2
-            indY -= 2
-        elif (sus == opMin):
-            op.append('sus')
-            indX -= 1
-            indY -= 1
-        elif (ins == opMin):
-            op.append('ins')
-            indY -= 1
-        elif (bor == opMin):
-            op.append('bor')
-            indX -= 1
-    # Caso llego a una pared de la matriz
+        op, decX, decY = elegir_operacion(x, y, indX, indY, ins, bor, sus, int)
+        secOp.append(op)
+        indX -= decX
+        indY -= decY
     while indY > 0:
-        op.append('ins')
+        secOp.append(('', y[indY - 1]))
         indY -= 1
     while indX > 0:
-        op.append('bor')
+        secOp.append((x[indX - 1], ''))
         indX -= 1
-
-    # Recuperación del camino
-    op = op[::-1]
-    indX, indY = 0, 0
-    #print(op)
-    secOp = []
-    for o in op:
-        if (o == 'ins'):
-            secOp.append(('', y[indY]))
-            indY += 1
-        elif (o == 'bor'):
-            secOp.append((x[indX], ''))
-            indX += 1
-        elif (o == 'sus'):
-            secOp.append((x[indX], y[indY]))
-            indX += 1
-            indY += 1
-        elif (o == 'int'):
-            secOp.append((str(x[indX:indX + 2]), str(y[indY:indY + 2])))
-            indX += 2
-            indY += 2
-        #print(secOp)
+    secOp = secOp[::-1]
     return D[lenX, lenY], secOp
 
 def damerau_restricted(x, y, threshold=None):
@@ -349,7 +298,7 @@ def damerau_intermediate_edicion(x, y, threshold=None):
                 )
 
     indX, indY = D.shape[0] - 1, D.shape[1] - 1
-    op = []
+    secOp = []
     while indX > 0 and indY > 0:
         ins = D[indX, indY - 1]
         bor = D[indX - 1, indY]
@@ -369,65 +318,17 @@ def damerau_intermediate_edicion(x, y, threshold=None):
             int2_3 = D[indX - 2][indY - 3]
         else:
             int2_3 = float('inf')
-        opMin = min(ins, bor, sus, int, int3_2, int2_3)
-        if (int3_2 == opMin):
-            op.append('int3_2')
-            indX -= 3
-            indY -= 2
-        elif (int2_3 == opMin):
-            op.append('int2_3')
-            indX -= 2
-            indY -= 3
-        elif (int == opMin):
-            op.append('int')
-            indX -= 2
-            indY -= 2
-        elif (sus == opMin):
-            op.append('sus')
-            indX -= 1
-            indY -= 1
-        elif (ins == opMin):
-            op.append('ins')
-            indY -= 1
-        elif (bor == opMin):
-            op.append('bor')
-            indX -= 1
-    # Caso llego a una pared de la matriz
+        op, decX, decY = elegir_operacion(x, y, indX, indY, ins, bor, sus, int, int3_2, int2_3)
+        secOp.append(op)
+        indX -= decX
+        indY -= decY
     while indY > 0:
-        op.append('ins')
+        secOp.append(('', y[indY - 1]))
         indY -= 1
     while indX > 0:
-        op.append('bor')
+        secOp.append((x[indX - 1], ''))
         indX -= 1
-
-    # Recuperación del camino
-    op = op[::-1]
-    indX, indY = 0, 0
-    #print(op)
-    secOp = []
-    for o in op:
-        if (o == 'ins'):
-            secOp.append(('', y[indY]))
-            indY += 1
-        elif (o == 'bor'):
-            secOp.append((x[indX], ''))
-            indX += 1
-        elif (o == 'sus'):
-            secOp.append((x[indX], y[indY]))
-            indX += 1
-            indY += 1
-        elif (o == 'int'):
-            secOp.append((str(x[indX:indX + 2]), str(y[indY:indY + 2])))
-            indX += 2
-            indY += 2
-        elif (o == 'int3_2'):
-            secOp.append((str(x[indX:indX + 3]), str(y[indY:indY + 2])))
-            indX += 3
-            indY += 2
-        elif (o == 'int2_3'):
-            secOp.append((str(x[indX:indX + 2]), str(y[indY:indY + 3])))
-            indX += 2
-            indY += 3
+    secOp = secOp[::-1]
     return D[lenX, lenY], secOp
     
 def damerau_intermediate(x, y, threshold=None):
@@ -513,3 +414,20 @@ opcionesEdicion = {
     'damerau_i':   damerau_intermediate_edicion
 }
 
+def elegir_operacion(x, y, indX, indY, dIns, dBor, dSus, dInt=float('inf'), dInt3_2=float('inf'), dInt2_3=float('inf')):
+    opMin = min(dIns, dBor, dSus, dInt, dInt3_2, dInt2_3)
+    if (dInt3_2 == opMin):
+        return (str(x[indX - 3:indX]), str(y[indY - 2:indY])), 3, 2
+    elif (dInt2_3 == opMin):
+        return (str(x[indX - 2:indX]), str(y[indY - 3:indY])), 2, 3
+    elif (dInt == opMin):
+        return (str(x[indX - 2:indX]), str(y[indY - 2:indY])), 2, 2
+    elif (dSus == opMin):
+        return (x[indX - 1], y[indY - 1]), 1, 1
+    elif (dIns == opMin):
+        return ('', y[indY - 1]), 0, 1
+    elif (dBor == opMin):
+        return (x[indX - 1], ''), 1, 0
+    else:
+        print("Error en edición")
+        exit()
