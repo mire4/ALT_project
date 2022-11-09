@@ -216,7 +216,7 @@ def damerau_restricted(x, y, threshold=None):
                         vcurrent[i],
                         vprevprev[i - 2] + 1
                     )
-        vprevprev = vprev.copy()
+        vprevprev, vprev = vprev, vprevprev
         vprev, vcurrent = vcurrent, vprev
     return vprev[-1]
 
@@ -392,8 +392,8 @@ def damerau_intermediate(x, y, threshold=None):
                         vcurrent[i],
                         vprevprevprev[i - 2] + 2
                     )
-        vprevprevprev = vprevprev.copy()
-        vprevprev = vprev.copy()
+        vprevprevprev, vprevprev = vprevprev, vprevprevprev
+        vprevprev, vprev = vprev, vprevprev
         vprev, vcurrent = vcurrent, vprev
     return vprev[-1]
 
