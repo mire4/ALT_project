@@ -235,7 +235,41 @@ def damerau_restricted_edicion(x, y, threshold=None):
 
 def damerau_restricted(x, y, threshold=None):
     # versión con reducción coste espacial y parada por threshold
-     return min(0,threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
+    lenX, lenY = len(x), len(y)
+    difX = lenX - lenY
+    vcurrent = np.zeros(lenX, dtype=int)
+    vprev = np.arange(1, lenX + 1, dtype=int)
+    vpreprev = 2147483647 * np.ones(lenX, dtype=int) # inf
+    for j in range(lenY):
+        for i in range(lenX):
+            if (difX + j > 0 and vprev[difX + j - 1] > threshold):
+                return threshold + 1
+            if (i == 0):
+                vcurrent[0] = min(
+                    j + (x[i] != y[j]),
+                    vprev[i] + 1
+                )
+            else:
+                vcurrent[i] = min(
+                    vcurrent[i - 1] + 1,
+                    vprev[i] + 1,
+                    vprev[i - 1] + (x[i] != y[j])
+                )
+            if ((i > 0 and j > 0)\
+                and (x[i - 1] == y[j] and x[i] == y[j - 1])):
+                if (i == 1):
+                    vcurrent[i] = min(
+                        vcurrent[i],
+                        j               # j - 1 + 1
+                    )
+                else:
+                    vcurrent[i] = min(
+                        vcurrent[i],
+                        vpreprev[i - 2] + 1
+                    )
+        vpreprev = vprev.copy()
+        vprev, vcurrent = vcurrent, vprev
+    return vprev[-1]
 
 def damerau_intermediate_matriz(x, y, threshold=None):
     # completar versión Damerau-Levenstein intermedia con matriz
@@ -257,7 +291,7 @@ opcionesSpell = {
     'levenshtein':   levenshtein,
     'levenshtein_o': levenshtein_cota_optimista,
     'damerau_rm':    damerau_restricted_matriz,
-    #'damerau_r':     damerau_restricted,
+    'damerau_r':     damerau_restricted,
     #'damerau_im':    damerau_intermediate_matriz,
     #'damerau_i':     damerau_intermediate
 }
