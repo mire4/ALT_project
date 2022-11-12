@@ -184,13 +184,21 @@ class SAR_Project:
             self.make_permuterm()
 
     def extract_vocabulary(self):
+        """
+        Devuelve una lista con todo el vocabulario
+
+        """
         vocabulary = []
+        # Si se hace una busqueda multifield, por cada field extraemos las llaves
+        # cuyo valor son las palabras que forman el vocabulario
         if(self.multifield):
             for field in self.fields:
                 for word in self.index[field[0]].keys():
                     if(word not in vocabulary):
                         vocabulary.append(word)
             return list(vocabulary)
+        # Si no se crea un diccionario para multifield, extraemos las llaves article
+        # cuyo valor son las palabras que forman el vocabulario
         else:
             return list(self.index['article'].keys())
 
@@ -555,7 +563,9 @@ class SAR_Project:
         return: posting list
 
         """
-        # Llamada al get que corresponde según los parámetros indicados
+        # Comprobación de que la palabra de la query existe en la indexacion,
+        # sino existe se buscan palabras que si que existen en el vocabulario
+        # y que sean parecidas.
         terms = self.index[field].get(term, [])
         if (self.use_spelling and terms == []):
             terms = self.speller.suggest(term, self.distance, self.threshold)
@@ -563,6 +573,7 @@ class SAR_Project:
             terms = [term]
 
         solution = []
+        # Llamada al get que corresponde según los parámetros indicados
         for t in terms:
             if self.permuterm and ('*' in t or '?' in t):
                 solution =  self.or_posting(self.get_permuterm(t, field), solution)
