@@ -80,14 +80,17 @@ class SpellSuggester:
             print("Distance type not found")
             exit()
 
+        # Calculo de la distancia de la palabra dada con el resto de palabras del vocabulario
+        # y si la distancia es menor igual al threshold se inserta en la lista.
         if flatten:
             listOfDistances = []
             for word in self.vocabulary:
                 resFunction = selectedFunction(term, word, threshold)
                 if resFunction <= threshold:
                     listOfDistances.append(word)
+        # Calculo de la distancia de la palabra dada con el resto de palabras del vocabulario
+        # y si la distancia es menor igual al threshold se inserta en la sublista correspondiente.
         else:
-            #Calcular la distancia de la palabra dada con el resto de palabras del vocabulario
             listOfDistances = [[] for i in range(threshold + 1)]
             for word in self.vocabulary:
                 resFunction = selectedFunction(term, word, threshold)
