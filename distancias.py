@@ -35,36 +35,45 @@ def levenshtein_edicion(x, y, threshold=None):
                 D[i][j - 1] + 1, # Borrado
                 D[i - 1][j - 1] + (x[i - 1] != y[j - 1]), # Sustitución
             )
-
-    indX, indY = D.shape[0] - 1, D.shape[1] - 1  # Desde el último elemento
+    indX, indY = D.shape[0] - 1, D.shape[1] - 1  # Desde el final
     secOp = []
-    while indX > 0 and indY > 0:
+    while indX > 0 and indY > 0: # Recorremos toda la matriz
+        # Calculamos los diferentes casos
         ins = D[indX, indY - 1]
         bor = D[indX - 1, indY]
         sus = D[indX - 1, indY - 1]
         op, decX, decY = elegir_operacion(x, y, indX, indY, ins, bor, sus)
+        # Añadimos la operación y reducimos los índices
         secOp.append(op)
         indX -= decX
         indY -= decY
+    # Si llegamos a una pared entonces suponemos inserciones o borrados
     while indY > 0:
         secOp.append(('', y[indY - 1]))
         indY -= 1
     while indX > 0:
         secOp.append((x[indX - 1], ''))
         indX -= 1
+    # Devolvemos las operaciones en el orden correcto
     secOp = secOp[::-1]
     return D[lenX, lenY], secOp
 
 def levenshtein_reduccion(x, y, threshold=None):
     lenX, lenY = len(x), len(y)
+    # Creamos dos arrays de longitud igual a las palabras
     vcurrent = np.zeros(lenX, dtype=int)
-    vprev = np.arange(1, lenX + 1, dtype=int)
+    vprev = np.arange(1, lenX + 1, dtype=int) # Inicializamos la primera fila de la tabla
+    # Para todas las filas y columnas
     for j in range(lenY):
         for i in range(lenX):
+            # En la primera columna miramos
+            # la posible borrado y la posible
+            # sustitución. No miramos inserción 
+            # porque j + 2 (inserción) >= j + 1 (sutitución !=)
             if (i == 0):
                 vcurrent[0] = min(
-                    j + (x[i] != y[j]),
-                    vprev[i] + 1
+                    j + (x[i] != y[j]), # Sustitución
+                    vprev[i] + 1 # Borrado
                 )
             else:
                 vcurrent[i] = min(
@@ -397,23 +406,6 @@ def damerau_intermediate(x, y, threshold=None):
         vprev, vcurrent = vcurrent, vprev
     return vprev[-1]
 
-opcionesSpell = {
-    'levenshtein_m': levenshtein_matriz,
-    'levenshtein_r': levenshtein_reduccion,
-    'levenshtein':   levenshtein,
-    'levenshtein_o': levenshtein_cota_optimista,
-    'damerau_rm':    damerau_restricted_matriz,
-    'damerau_r':     damerau_restricted,
-    'damerau_im':    damerau_intermediate_matriz,
-    'damerau_i':     damerau_intermediate
-}
-
-opcionesEdicion = {
-    'levenshtein': levenshtein_edicion,
-    'damerau_r':   damerau_restricted_edicion,
-    'damerau_i':   damerau_intermediate_edicion
-}
-
 def elegir_operacion(x, y, indX, indY, dIns, dBor, dSus, dInt=float('inf'), dInt3_2=float('inf'), dInt2_3=float('inf')):
     opMin = min(dIns, dBor, dSus, dInt, dInt3_2, dInt2_3)
     if (dInt3_2 == opMin):
@@ -431,3 +423,20 @@ def elegir_operacion(x, y, indX, indY, dIns, dBor, dSus, dInt=float('inf'), dInt
     else:
         print("Error en edición")
         exit()
+
+opcionesSpell = {
+    'levenshtein_m': levenshtein_matriz,
+    'levenshtein_r': levenshtein_reduccion,
+    'levenshtein':   levenshtein,
+    'levenshtein_o': levenshtein_cota_optimista,
+    'damerau_rm':    damerau_restricted_matriz,
+    'damerau_r':     damerau_restricted,
+    'damerau_im':    damerau_intermediate_matriz,
+    'damerau_i':     damerau_intermediate
+}
+
+opcionesEdicion = {
+    'levenshtein': levenshtein_edicion,
+    'damerau_r':   damerau_restricted_edicion,
+    'damerau_i':   damerau_intermediate_edicion
+}
