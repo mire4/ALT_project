@@ -67,7 +67,7 @@ def levenshtein_reduccion(x, y, threshold=None):
     for j in range(lenY):
         for i in range(lenX):
             # En la primera columna miramos
-            # la posible borrado y la posible
+            # el posible borrado y la posible
             # sustitución. No miramos inserción 
             # porque j + 2 (inserción) >= j + 1 (sutitución !=)
             if (i == 0):
@@ -77,20 +77,20 @@ def levenshtein_reduccion(x, y, threshold=None):
                 )
             else:
                 vcurrent[i] = min(
-                    vcurrent[i - 1] + 1,
-                    vprev[i] + 1,
-                    vprev[i - 1] + (x[i] != y[j])
+                    vcurrent[i - 1] + 1, # Inserción
+                    vprev[i] + 1, # Borrado
+                    vprev[i - 1] + (x[i] != y[j]) # Sustitución
                 )
         vprev, vcurrent = vcurrent, vprev
     return vprev[-1]
                 
 def levenshtein(x, y, threshold):
     lenX, lenY = len(x), len(y)
-    difX = lenX - lenY
+    difX = lenX - lenY # Diferencia del tamaño de las palabras
     vcurrent = np.zeros(lenX, dtype=int)
     vprev = np.arange(1, lenX + 1, dtype=int)
     for j in range(lenY):
-        if (difX + j > 0 and vprev[difX + j - 1] > threshold):
+        if (difX + j > 0 and vprev[difX + j - 1] > threshold): # Comparación de la distancia con la cota
             return threshold + 1
         for i in range(lenX):
             if (i == 0):
@@ -108,20 +108,20 @@ def levenshtein(x, y, threshold):
     return vprev[-1]
 
 def levenshtein_cota_optimista(x, y, threshold):
-    contDict = dict()
-    distancePos, distanceNeg = 0, 0
-    for letter in x:
-        contDict[letter] = contDict.get(letter, 0) + 1
-    for letter in y:
-        contDict[letter] = contDict.get(letter, 0) - 1
-    for value in contDict.values():
+    contDict = dict() # Creación de un diccionario
+    distancePos, distanceNeg = 0, 0 
+    for letter in x: # Para cada letra de la palabra X
+        contDict[letter] = contDict.get(letter, 0) + 1 # Se cuentan las veces que aparece cada palabra
+    for letter in y: # Para cada letra de la palabra Y
+        contDict[letter] = contDict.get(letter, 0) - 1 # Se descuentan las veces que aparece cada letra
+    for value in contDict.values(): 
         if value > 0:
-            distancePos += value
+            distancePos += value 
         else:
             distanceNeg += abs(value)
-        if distancePos > threshold or distanceNeg > threshold:
+        if distancePos > threshold or distanceNeg > threshold: # Si una de las dos es mayor que la cota
             return threshold + 1
-    return levenshtein(x, y, threshold)
+    return levenshtein(x, y, threshold) 
 
 def damerau_restricted_matriz(x, y, threshold=None):
     # completar versión Damerau-Levenstein restringida con matriz
@@ -408,17 +408,17 @@ def damerau_intermediate(x, y, threshold=None):
 
 def elegir_operacion(x, y, indX, indY, dIns, dBor, dSus, dInt=float('inf'), dInt3_2=float('inf'), dInt2_3=float('inf')):
     opMin = min(dIns, dBor, dSus, dInt, dInt3_2, dInt2_3)
-    if (dInt3_2 == opMin):
+    if (dInt3_2 == opMin): # Intercambio 3 a 2 letras
         return (str(x[indX - 3:indX]), str(y[indY - 2:indY])), 3, 2
-    elif (dInt2_3 == opMin):
+    elif (dInt2_3 == opMin): # Intercambio 2 a 3 letras
         return (str(x[indX - 2:indX]), str(y[indY - 3:indY])), 2, 3
-    elif (dInt == opMin):
+    elif (dInt == opMin): # Intercambio
         return (str(x[indX - 2:indX]), str(y[indY - 2:indY])), 2, 2
-    elif (dSus == opMin):
+    elif (dSus == opMin): # Sustitución
         return (x[indX - 1], y[indY - 1]), 1, 1
-    elif (dIns == opMin):
+    elif (dIns == opMin): # Inserción
         return ('', y[indY - 1]), 0, 1
-    elif (dBor == opMin):
+    elif (dBor == opMin): # Borrado
         return (x[indX - 1], ''), 1, 0
     else:
         print("Error en edición")
